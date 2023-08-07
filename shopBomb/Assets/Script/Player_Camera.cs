@@ -9,6 +9,7 @@ public class Player_Camera : MonoBehaviour
 
     public float xSen = 180f;
     public float ySen = 100f;
+   
     public Transform orgn;
     public Transform offest;
     public float mincamlp = -89;
@@ -18,9 +19,13 @@ public class Player_Camera : MonoBehaviour
     float xRotation;
     Vector2 LookD;
 
+    //public RaycastHit hit;
+
     public InputActionAsset actionsAssests;
     InputActionMap onFootMap;
     InputAction lookAction;
+
+    public GameObject hoverObject; 
 
     // Start is called before the first frame update
     void Start()
@@ -38,6 +43,8 @@ public class Player_Camera : MonoBehaviour
         lookAction.canceled += canx => OnLook(canx);
 
     }
+
+
 
     // Update is called once per frame
     void Update()
@@ -81,4 +88,6 @@ public class Player_Camera : MonoBehaviour
             transform.position = offest.position;
         }
     }
+
+
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,7 +11,9 @@ public class Player_Movement : MonoBehaviour
     public CharacterController CharacterController;
     public Transform groundCheck;
     public Transform CameraT;
-    public GameManage gameManager; 
+    public Player_Camera camera;
+    public GameManage gameManager;
+    public GameObject HoldObj;
 
     // changeable public paramenter
     public float speed = 12f;
@@ -34,6 +37,10 @@ public class Player_Movement : MonoBehaviour
     private bool fall;
     Vector3 FJumpPosition;
     Vector3 LJumpPosition;
+    bool interacting;
+    RaycastHit hit;
+    GameObject hoverObj;
+
 
     //input map
     public InputActionAsset actionsAssests;
@@ -41,6 +48,7 @@ public class Player_Movement : MonoBehaviour
     InputActionMap utilityMap;
     InputAction moveAction;
     InputAction jumpAction;
+    InputAction interactAction;
     InputAction pauseAction;
 
 
@@ -53,6 +61,8 @@ public class Player_Movement : MonoBehaviour
     {
         gravity = Physics.gravity;
 
+        //rayHit = camera.hit; 
+
         onFootMap = actionsAssests.FindActionMap("OnFoot");
         utilityMap = actionsAssests.FindActionMap("Utility");
         onFootMap.Enable();
@@ -60,7 +70,7 @@ public class Player_Movement : MonoBehaviour
         pauseAction = utilityMap.FindAction("pause");
 
         moveAction = onFootMap.FindAction("Move");
-
+        interactAction = onFootMap.FindAction("Interact");
         jumpAction = onFootMap.FindAction("Jump");
 
         moveAction.performed += context => OnMove(context);
@@ -68,9 +78,14 @@ public class Player_Movement : MonoBehaviour
 
         jumpAction.performed += context => OnJump(context);
         jumpAction.canceled += ctx => OnJump(ctx);
-        
-    //    pauseAction.performed+= context => gameManager.PauseGame();
-        pauseAction.canceled += ctx => gameManager.PauseingGame();
+
+        interactAction.performed += context => OnInteract(context);
+        interactAction.canceled += ctx => OnInteract(ctx);
+
+        //    pauseAction.performed+= context => gameManager.PauseGame();
+        pauseAction.performed += ctx => gameManager.PauseingGame();
+
+
 
     }
 
@@ -79,8 +94,24 @@ public class Player_Movement : MonoBehaviour
     private void FixedUpdate()
     {
         isGrounded = Physics.CheckSphere(groundCheck.position, isGroundedRadius);
- 
-        
+
+        int layerMask = 1 << 8;
+        layerMask = ~layerMask;
+
+        // Does the ray intersect any objects excluding the player layer
+        if (Physics.Raycast(CameraT.position, CameraT.TransformDirection(Vector3.forward), out hit, Mathf.Infinity, layerMask))
+        {
+            Debug.DrawRay(CameraT.position, CameraT.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
+
+            print(hit.collider.gameObject.tag);
+       
+        }
+        else
+        {
+            Debug.DrawRay(CameraT.position, CameraT.TransformDirection(Vector3.forward) * 1000, Color.white);
+            //Debug.Log("Did not Hit");
+        }
+
     }
 
     void Update()
@@ -169,5 +200,60 @@ public class Player_Movement : MonoBehaviour
         }
     }
 
-    
+
+    void OnInteract(InputAction.CallbackContext context)
+    {
+        
+        if (context.performed)
+        {
+        
+
+        }
+        else if (context.canceled)
+        {
+            if (!interacting)
+            {
+                 PickUpItem(hit.collider.gameObject);
+                interacting = true;
+            }
+            else
+            {
+                PlaceItem();
+                interacting = false;
+            }
+
+           
+        }
+    }
+
+    /**
+     * 
+     * places what ever object under place holder
+     */
+     
+    private void PlaceItem()
+    {
+        //TODO
+    }
+
+    /**
+     * take the object with tag of item and places it in the placehold object
+     */
+    void PickUpItem(GameObject item)
+    {
+        GameObject go = item;
+        //  if (go.GetComponent<Item>())
+        //{
+        if (go.tag == "Item")
+        {
+            go.transform.position = HoldObj.transform.position;
+            go.transform.parent = HoldObj.transform;
+            BoxCollider c = go.GetComponent<BoxCollider>();
+            //go.transform.position = Vector3.zero;
+            c.enabled = false;
+            go.layer = 8;
+
+        }
+    }
+
 }

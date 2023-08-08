@@ -82,34 +82,28 @@ public class Player_Movement : MonoBehaviour
         interactAction.performed += context => OnInteract(context);
         interactAction.canceled += ctx => OnInteract(ctx);
 
-        //    pauseAction.performed+= context => gameManager.PauseGame();
         pauseAction.performed += ctx => gameManager.PauseingGame();
 
 
 
     }
 
-    // Update is called once per frame
 
     private void FixedUpdate()
     {
         isGrounded = Physics.CheckSphere(groundCheck.position, isGroundedRadius);
 
-        int layerMask = 1 << 8;
+        int layerMask = 1 << 7;
         layerMask = ~layerMask;
 
-        // Does the ray intersect any objects excluding the player layer
         if (Physics.Raycast(CameraT.position, CameraT.TransformDirection(Vector3.forward), out hit, Mathf.Infinity, layerMask))
         {
             Debug.DrawRay(CameraT.position, CameraT.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
 
-            print(hit.collider.gameObject.tag);
-       
         }
         else
         {
             Debug.DrawRay(CameraT.position, CameraT.TransformDirection(Vector3.forward) * 1000, Color.white);
-            //Debug.Log("Did not Hit");
         }
 
     }
@@ -213,12 +207,13 @@ public class Player_Movement : MonoBehaviour
         {
             if (!interacting)
             {
-                 PickUpItem(hit.collider.gameObject);
+                hoverObj = hit.collider.gameObject;
+                PickUpItem(hoverObj);
                 interacting = true;
             }
             else
             {
-                PlaceItem();
+                PlaceItem(hoverObj);
                 interacting = false;
             }
 
@@ -231,9 +226,18 @@ public class Player_Movement : MonoBehaviour
      * places what ever object under place holder
      */
      
-    private void PlaceItem()
+    private void PlaceItem(GameObject item)
     {
         //TODO
+        GameObject go = item;
+
+        if (go.GetComponent<Item>())
+        {
+            Item item1 = go.GetComponent<Item>();
+            item1.PlaceItem(hit);
+
+        }
+
     }
 
     /**
@@ -249,7 +253,6 @@ public class Player_Movement : MonoBehaviour
             go.transform.position = HoldObj.transform.position;
             go.transform.parent = HoldObj.transform;
             BoxCollider c = go.GetComponent<BoxCollider>();
-            //go.transform.position = Vector3.zero;
             c.enabled = false;
             go.layer = 8;
 
